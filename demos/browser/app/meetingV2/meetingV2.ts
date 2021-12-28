@@ -696,6 +696,7 @@ export class DemoMeetingApp
           this.showProgress('progress-authenticate');
           const region = this.region || 'us-east-1';
           try {
+            const csrftoken = this.getCSRFToken();
             const response = await fetch(
               `${DemoMeetingApp.BASE_URL}join?title=${encodeURIComponent(
                 this.meeting
@@ -704,6 +705,11 @@ export class DemoMeetingApp
               )}`,
               {
                 method: 'POST',
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrftoken
+                }
               }
             );
             const json = await response.json();
@@ -1367,6 +1373,14 @@ export class DemoMeetingApp
     this.log('Mute state: device', device, muted ? 'is muted' : 'is not muted');
   }
 
+  getCSRFToken(): string {
+    try{
+      return (document.querySelector('[name=csrfmiddlewaretoken]') as HTMLInputElement).value;
+    }catch(error){
+      return '';
+    }
+ }
+
   audioInputsChanged(freshAudioInputDeviceList: MediaDeviceInfo[]): void {
     this.onAudioInputsChanged(freshAudioInputDeviceList);
   }
@@ -1679,6 +1693,7 @@ export class DemoMeetingApp
     await this.chosenVideoTransformDevice?.stop();
     this.chosenVideoTransformDevice = undefined;
     this.roster = {};
+    window.location.href = `${DemoMeetingApp.BASE_URL}core/results/`;
   }
 
   setupMuteHandler(): void {
@@ -2111,12 +2126,18 @@ export class DemoMeetingApp
 
   // eslint-disable-next-line
   async joinMeeting(): Promise<any> {
+    const csrftoken = this.getCSRFToken();
     const response = await fetch(
       `${DemoMeetingApp.BASE_URL}join?title=${encodeURIComponent(
         this.meeting
       )}&name=${encodeURIComponent(this.name)}&region=${encodeURIComponent(this.region)}&ns_es=${this.echoReductionCapability}`,
       {
         method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        }
       }
     );
     const json = await response.json();
